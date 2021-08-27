@@ -1,0 +1,6 @@
+Changelog 
+
+8/18 
+	Package Created
+	Psuedocode updated
+	

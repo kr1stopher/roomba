@@ -1,0 +1,111 @@
+#!/usr/bin/env python
+
+Goal: 90% of open area on the map is explored. Turtlebot returns to starting position 
+
+python imports:
+	rospy 
+	geometry_msgs -> Twist()
+	sensor_msgs -> LaserScan
+	read data from /map (https://answers.ros.org/question/287743/is-it-possible-to-read-data-from-map/)
+
+initialize velocoties 
+burger lin =.22, angle = 2.84
+waffle lin = .26 angle = 1.8
+
+lin step size = .01 
+ang = .1
+
+
+
+
+
+using basic auto nav controls:{
+dangerZone = []  #range of obstacele in front of turtlebot3 where collision must be avoided (based on tb width up to .7m ahead) 
+
+extremeDangerZone = [] #range of obstacle too close to turtlebot, will stop forward movement at this time
+
+def isObstacle():
+	if noDanger:
+		return 0
+	elif object in extremeDangerZone:
+		return 1
+	elif object in DangerZone:
+		return 2
+	
+
+def redirect():
+	slower linear velocity (80%)
+	increase angular velocity (left) slowly 
+	keep obstacle to the right turn left until object not in danger zone 
+
+def extremeDanger():
+	liner velocity = 0 
+	angular = 50% 
+	
+	
+def noObstacle():
+	fullspeed ahead 
+	angular speed 0
+	
+def right_or_left():
+	determine if the turtlebot should go right or left 
+
+}
+
+
+Roomba additions: 
+{
+
+Phase 1:
+tbot will drive randomly until cutoff% of open area explored 
+
+
+explored = /map.data  or occupancy grid   
+isExplored = 0 #percent of explorable area that has currently been explored
+
+# intialized from map data, to be modified as the turtlebot visits areas 
+
+
+# -1 unexplored, 0 = ?, 100 = ?,  -2 = open & explored 
+def updateExplored():
+	#update the explored grid based on turtlebot's  current position and dimensions 
+	explored[location]= -2 for areas the turtlebot has explored 
+	#check to see % of explorable map has now been explored 
+	#if explored = cutoff%  stop turtlebot 
+	
+	
+
+	
+ToDo:
+	Update left or right & directions to prioritize going towards unexplored areas 
+	return to origin  if isExplored reaches 90%
+
+
+}
+
+
+
+
+
+
+if __name__=="__main__":
+	initialize publisher to /cmd_vel 
+	intialize subscriber to /scan 
+	twist variable 
+	scan variable 
+	
+	while (ros not shutdown):
+		subscribe to /scan
+		mode = isObstacle()
+		if mode == 0:
+			twist = noObstacle()
+		if mode == 1:
+			twist = redirect()
+		if mode == 2
+			twist = extremeDanger()
+		publish to /cmd_vel
+			
+			
+	
+
+
