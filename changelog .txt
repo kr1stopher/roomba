@@ -3,4 +3,15 @@ Changelog
 8/18 
 	Package Created
 	Psuedocode updated
+8/25
+	roomba node began 
+	
+8/26
+	revamp roomba code to work in conjunction with auto_nav rather than to include auto_nav within it.
+
+8/31
+	exploredInit function done
+	odom -> map data conversion calculated  
+		#odom(x,y) -> /map data[i-(y/resolution), i+(x/resolution)] for origin of turtlebot
+	subscriber working
 	

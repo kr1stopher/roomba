@@ -4,74 +4,29 @@ Goal: 90% of open area on the map is explored. Turtlebot returns to starting pos
 
 python imports:
 	rospy 
-	geometry_msgs -> Twist()
-	sensor_msgs -> LaserScan
-	read data from /map (https://answers.ros.org/question/287743/is-it-possible-to-read-data-from-map/)
+	from nav_msgs.msg import Odometry, OccupancyGrid
 
-initialize velocoties 
-burger lin =.22, angle = 2.84
-waffle lin = .26 angle = 1.8
 
-lin step size = .01 
-ang = .1
+initialize dimensions based on tbot model 
 
 
 
+isExplored = []
+# -1 unexplored, 0 = open, 100 = obstacle,  -2 = open & explored 
+
+percentExplored = 0 # (open & explored)/(open & explored)+open  *100%
 
 
-using basic auto nav controls:{
-dangerZone = []  #range of obstacele in front of turtlebot3 where collision must be avoided (based on tb width up to .7m ahead) 
+def exploredInit(msg):
+	is explored = msg.data
+	updateExplored()
 
-extremeDangerZone = [] #range of obstacle too close to turtlebot, will stop forward movement at this time
-
-def isObstacle():
-	if noDanger:
-		return 0
-	elif object in extremeDangerZone:
-		return 1
-	elif object in DangerZone:
-		return 2
-	
-
-def redirect():
-	slower linear velocity (80%)
-	increase angular velocity (left) slowly 
-	keep obstacle to the right turn left until object not in danger zone 
-
-def extremeDanger():
-	liner velocity = 0 
-	angular = 50% 
-	
-	
-def noObstacle():
-	fullspeed ahead 
-	angular speed 0
-	
-def right_or_left():
-	determine if the turtlebot should go right or left 
-
-}
-
-
-Roomba additions: 
-{
-
-Phase 1:
-tbot will drive randomly until cutoff% of open area explored 
-
-
-explored = /map.data  or occupancy grid   
-isExplored = 0 #percent of explorable area that has currently been explored
-
-# intialized from map data, to be modified as the turtlebot visits areas 
-
-
-# -1 unexplored, 0 = ?, 100 = ?,  -2 = open & explored 
 def updateExplored():
 	#update the explored grid based on turtlebot's  current position and dimensions 
-	explored[location]= -2 for areas the turtlebot has explored 
-	#check to see % of explorable map has now been explored 
-	#if explored = cutoff%  stop turtlebot 
+	explored[location]= -2 for areas the turtlebot is currently located
+	update percentExplored 
+	
+	
 	
 	
 
@@ -79,8 +34,6 @@ def updateExplored():
 ToDo:
 	Update left or right & directions to prioritize going towards unexplored areas 
 	return to origin  if isExplored reaches 90%
-
-
 }
 
 
@@ -89,22 +42,13 @@ ToDo:
 
 
 if __name__=="__main__":
-	initialize publisher to /cmd_vel 
-	intialize subscriber to /scan 
-	twist variable 
-	scan variable 
+	rospy.init_node('roomba')
+	sub = rospy.Subscriber('map', OccupancyGrid, exploredInit)
 	
+isExplored = 0 #percent of explorable area that has currently been explored
 	while (ros not shutdown):
-		subscribe to /scan
-		mode = isObstacle()
-		if mode == 0:
-			twist = noObstacle()
-		if mode == 1:
-			twist = redirect()
-		if mode == 2
-			twist = extremeDanger()
-		publish to /cmd_vel
-			
+		sub1 = rospy.Subscriber('odom',Odometry, updateExplored)
+		
 			
 	
 
