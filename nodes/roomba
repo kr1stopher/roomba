@@ -3,18 +3,25 @@ import rospy
 
 from nav_msgs.msg import OccupancyGrid
 from nav_msgs.msg import Odometry
+import numpy
+from rospy_tutorials.msg import Floats
+from std_msgs.msg import String,Int32,Int32MultiArray,MultiArrayLayout,MultiArrayDimension, Float64MultiArray
+
 
 #global variables
 isExplored = []
 percentExplored = 0
+explored = 0
+unexplored = 0
 centeri = -1
 centerj = -1
 resolution = -1
+width = 0
+length = 0
 
 
 
 
-#odom(x,y) -> /map data[i-(y/resolution), i+(x/resolution)] for origin of turtlebot
 
 
 class exploredData:
@@ -28,6 +35,7 @@ class exploredData:
 
 
 def turtlebotCoverage(msg):
+  global width, length
   if (rospy.get_param('MODEL', 'waffle')== 'waffle'):
       length = .281
       width = .306
@@ -39,29 +47,89 @@ def turtlebotCoverage(msg):
 def exploredInit(data):
     print('Im in here and heard shit')
     #rospy.loginfo(rospy.get_caller_id() + "I heard %s", data.data)
-    global isExplored, centeri, centerj
+    global isExplored, centeri, centerj, unexplored
     isExplored = data.data
     centeri  = (data.info.width/2)
     centerj = (data.info.width/2)
     resolution = data.info.resolution
+    for items in isExplored:
+        if items == 0:
+            unexplored = unexplored +1
     #turtlebotCoverage(msg)
 
 
-def updateExplored(msg):
-    
-    pass
-    #update isExplored based on tbot odometry data and dimensions
+#odom(x,y) -> /map data[i-(y/resolution), i+(x/resolution)] for origin of turtlebot
 
+def updateExplored(msg):
+    global explored, isExplored, centeri, centerj, length, width, explored, unexplored
+    x = msg.pose.pose.position.x
+    y = msg.pose.pose.position.y
+    print('(x,y) =', (x,y))
+    #update isExplored based on tbot odometry data and dimensions
+    # isExplored[centeri - (y/resolution), centerj+(x/resolution)] <-center of tbot, need to go above and below by 1/2 width and length
+    i = centeri - (y/resolution) - width/(2*resolution)
+    j = centerj - (x/resolution) - length/(2*resolution)
+    while i < centeri - (y/resolution) + width/(2*resolution):
+        while j <  centerj - (x/resolution) + length/(2*resolution):
+            if isExplored[i,j] == 0:
+                isExplored[i,j] = -2
+                explored = explored +1
+            j=j+1
+        i = i +1
+
+#same as explored, with manual odom info instead of subscriber
+def updateExploredOdomOff():
+    global explored, isExplored, centeri, centerj, length, width, explored, unexplored
+    x = -2
+    y = -.5
+    print('(x,y) =', (x,y))
+    #update isExplored based on tbot odometry data and dimensions
+    # isExplored[centeri - (y/resolution), centerj+(x/resolution)] <-center of tbot, need to go above and below by 1/2 width and length
+    i = centeri - (y/resolution) - width/(2*resolution)
+    j = centerj - (x/resolution) - length/(2*resolution)
+    while i < centeri - (y/resolution) + width/(2*resolution):
+        while j <  centerj - (x/resolution) + length/(2*resolution):
+            if isExplored[i,j] == 0:
+                isExplored[i,j] = -2
+                explored = explored +1
+            j=j+1
+        i = i +1
 
 def main():
-    sub = rospy.Subscriber('/odom',Odometry, updateExplored)
+    i = 0
+    r = rospy.Rate(5)
+    while i<10:
+        sub = rospy.Subscriber('/odom',Odometry, updateExplored)
+        print(i)
+        i=i+1
+        r.sleep()
+    print(isExplored)
+    print('probably about to die')
+    pub = rospy.Publisher('explored',Int32MultiArray,queue_size = 10)
+    pub.publish(isExplored)
     rospy.spin() # continue until exit
 
 
 if __name__ == '__main__':
+    odomOff = True #used to test code without added gazeebo simulator stress on cpu
     rospy.init_node('roomba')
     msg = rospy.wait_for_message('/map', OccupancyGrid, timeout = 5)
+    pub = rospy.Publisher('explored',String ,queue_size = 10)
     exploredInit(msg)
     print(isExplored)
     print(centeri, centerj)
-    main()
+    # main()
+    while not rospy.is_shutdown():
+        i = 0
+        r = rospy.Rate(5)
+        while i<10:
+            if not odomOff:
+                sub = rospy.Subscriber('/odom',Odometry, updateExplored)
+            elif odomOff:
+                updateExploredOdomOff()
+            print(i)
+            i=i+1
+            r.sleep()
+        print(isExplored)
+        print('probably about to die')
+        pub.publish('potato')

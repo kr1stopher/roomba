@@ -15,3 +15,9 @@ Changelog
 		#odom(x,y) -> /map data[i-(y/resolution), i+(x/resolution)] for origin of turtlebot
 	subscriber working
 	
+8/1
+	odomOff bool added to run roomba node without turtlebot maze and gazeebo hogging computer space 
+	publish to topic /explored 
+		need to add msg type, isExplored = [] is a rather large 2d array 
+	updateExplored() loop added, requires testing 
+	
